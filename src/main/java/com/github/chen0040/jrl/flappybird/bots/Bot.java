@@ -1,6 +1,25 @@
 package com.github.chen0040.jrl.flappybird.bots;
 
-public class Bot {
+import com.github.chen0040.jrl.flappybird.Game;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public abstract class Bot {
+
+    protected int lastState;
+    protected int lastAction;
+    protected List<Move> moves = new ArrayList<>();
+    protected final Game game;
+    protected int playerX;
+    protected int playerY;
+
+    public static final int PLAYER_HEIGHT = 32;
+    public static final int PLAYER_WIDTH = 64;
+
+    public Bot(Game game) {
+        this.game = game;
+    }
 
     public static int mapState(double xdif, double ydif, int vel) {
 
@@ -24,21 +43,38 @@ public class Bot {
         return ((int)(xdif)) * 1000000 + ((int)(ydif)) * 1000 + vel;
     }
 
+    protected abstract int selectAction(int state);
+
+    public abstract void updateStrategy();
+
     public int act(double xdif, double ydif, int vel){
 
-    //Chooses the best action with respect to the current state - Chooses 0 (don't flap) to tie-break
+        //Chooses the best action with respect to the current state - Chooses 0 (don't flap) to tie-break
 
-    String state = self.map_state(xdif, ydif, vel)
+        int state = mapState(xdif, ydif, vel);
 
-            self.moves.append( [self.last_state, self.last_action, state] ) # Add the experience to the history
+        if(lastState != -1) {
+            this.moves.add(new Move(lastState, lastAction, state, 1)); // Add the experience to the history
+        }
 
-    self.last_state = state # Update the last_state with the current state
+        int action = selectAction(state);
 
-        if self.qvalues[state][0] >= self.qvalues[state][1]:
-    self.last_action = 0
-            return 0
-            else:
-    self.last_action = 1
-            return 1
+        lastState = state; // Update the last_state with the current state
+        lastAction = action;
+
+        return action;
+    }
+
+    public void reset() {
+        lastState = -1;
+        lastAction = -1;
+        moves.clear();
+
+
+
+        playerX = (int)(Game.SCREEN_WIDTH * 0.2);
+        playerY = (Game.SCREEN_HEIGHT - PLAYER_HEIGHT) / 2;
+
+
     }
 }
