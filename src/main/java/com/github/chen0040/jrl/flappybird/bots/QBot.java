@@ -22,7 +22,7 @@ public class QBot extends Bot {
     public void updateStrategy() {
 
 
-        agent.update(lastState, lastAction, mapState(0, 0, 10), -1000);
+        agent.update(lastState, lastAction, game.mapState(0, 0, 10), -1000);
 
         for(int i=moves.size()-1; i >=0; --i){
             Move move = moves.get(i);

@@ -3,7 +3,9 @@ package com.github.chen0040.jrl.flappybird.bots;
 import com.github.chen0040.jrl.flappybird.Game;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public abstract class Bot {
 
@@ -14,34 +16,17 @@ public abstract class Bot {
     protected int playerX;
     protected int playerY;
 
+
     public static final int PLAYER_HEIGHT = 32;
     public static final int PLAYER_WIDTH = 64;
 
     public Bot(Game game) {
         this.game = game;
+
+
     }
 
-    public static int mapState(double xdif, double ydif, int vel) {
 
-        // Map the (xdif, ydif, vel)to the respective state, with regards to the grids
-        // The state is a string, "xdif_ydif_vel"
-        // X ->[-40, -30.. .120]U[140, 210 ...420]
-        // Y ->[-300, -290 ...160]U[180, 240 ...420]
-
-        if(xdif < 140) {
-            xdif = (int)xdif - ((int)(xdif) % 10);
-        } else {
-            xdif = (int)xdif - ((int)(xdif) % 70);
-        }
-
-        if(ydif < 180) {
-            ydif = (int)ydif - ((int)(ydif) % 10);
-        } else {
-            ydif = (int)(ydif) - ((int)(ydif) % 60);
-        }
-
-        return ((int)(xdif)) * 1000000 + ((int)(ydif)) * 1000 + vel;
-    }
 
     protected abstract int selectAction(int state);
 
@@ -51,7 +36,7 @@ public abstract class Bot {
 
         //Chooses the best action with respect to the current state - Chooses 0 (don't flap) to tie-break
 
-        int state = mapState(xdif, ydif, vel);
+        int state = game.mapState(xdif, ydif, vel);
 
         if(lastState != -1) {
             this.moves.add(new Move(lastState, lastAction, state, 1)); // Add the experience to the history
