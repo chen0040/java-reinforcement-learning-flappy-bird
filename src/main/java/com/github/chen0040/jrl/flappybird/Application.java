@@ -1,6 +1,6 @@
 package com.github.chen0040.jrl.flappybird;
 
-import java.awt.EventQueue;
+import java.awt.*;
 import javax.swing.JFrame;
 
 
@@ -13,13 +13,13 @@ public class Application extends JFrame {
 
     private void initUI() {
 
-        add(new GameBoard());
-
-        setSize(250, 200);
+        add(new GameBoard(new Game()));
 
         setTitle("Application");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
+
+        setSize(new Dimension(Game.SCREEN_WIDTH, Game.SCREEN_HEIGHT));
     }
 
     public static void main(String[] args) {
