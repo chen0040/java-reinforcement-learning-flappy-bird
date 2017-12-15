@@ -32,7 +32,7 @@ public abstract class Bot {
 
     public abstract void updateStrategy();
 
-    public int act(double xdif, double ydif, int vel){
+    public int act(int xdif, int ydif, int vel){
 
         //Chooses the best action with respect to the current state - Chooses 0 (don't flap) to tie-break
 

@@ -2,12 +2,12 @@ package com.github.chen0040.jrl.flappybird;
 
 public class Pipe {
     public int x;
-    public int yLower;
-    public int yUpper;
+    public int y;
 
-    public Pipe(int x, int yLower, int yUpper) {
+    public Pipe(int x, int y) {
         this.x = x;
-        this.yLower = yLower;
-        this.yUpper = yUpper;
+        this.y = y;
     }
+
+
 }

@@ -1,8 +1,16 @@
 package com.github.chen0040.jrl.flappybird;
 
+import com.github.chen0040.jrl.flappybird.bots.Bot;
+import com.github.chen0040.jrl.flappybird.bots.QBot;
+import com.github.chen0040.jrl.flappybird.utils.Cycle;
+import com.github.chen0040.jrl.flappybird.utils.IterTools;
+import com.github.chen0040.rl.learning.qlearn.QLearner;
+
+import javax.swing.*;
+import java.awt.*;
 import java.util.*;
 
-public class Game {
+public class Game extends JPanel {
 
     public static final int FPS = 60;
     public static final int SCREEN_WIDTH = 288;
@@ -16,70 +24,193 @@ public class Game {
 
     public static final int PIPE_HEIGHT = 320;
 
-    protected Map<String, Integer> state_word2idx = new HashMap<>();
-    protected Map<Integer, String> state_idx2word = new HashMap<>();
+    private GameStates states = new GameStates();
+
+    private int playerx;
+    private int playery;
+
+    private int basex;
+    private int baseShift;
+
+    private int pipeVelX = -4;
+
+    // player velocity, max velocity, downward accleration, accleration on flap
+    private int playerVelY    =  -9;   // player's velocity along Y, default same as playerFlapped
+    private int playerMaxVelY =  10;   // max vel along Y, max descend speed
+    private int playerMinVelY =  -8;   // min vel along Y, max ascend speed
+    private int playerAccY    =   1;   // players downward accleration
+    private int playerFlapAcc =  -9;   // players speed on flapping
+    private boolean playerFlapped = false; // True when player flaps
+
+    private Pipe[] upperPipes;
+    private Pipe[] lowerPipes;
+
+    private int score;
+
+    private int loopIter;
+    private int playerIndex;
+
+    private Cycle playerIndexGen;
+
+    private Bot bot;
+
+    private GameAssets assets = new GameAssets();
 
     public Game() {
-        List<Integer> xValues = new ArrayList<>();
-        for(int i=-40; i < 140; i+=10){
-            xValues.add(i);
-        }
-        for(int i=140; i < 421; i+=70) {
-            xValues.add(i);
-        }
-        xValues.sort(Integer::compare);
-        List<Integer> yValues = new ArrayList<>();
-        for(int i=-300; i < 180; i+=10) {
-            yValues.add(i);
-        }
-        for(int i=180; i < 421; i+=60) {
-            yValues.add(i);
-        }
-        yValues.sort(Integer::compare);
-        List<Integer> vValues = new ArrayList<>();
-        for(int i=-10; i < 11; i++) {
-            vValues.add(i);
-        }
 
-        int idx = 0;
-        for(Integer x : xValues){
-            for(Integer y : yValues) {
-                for(Integer v : vValues) {
-                    String word = x + "_" + y + "_" + v;
-                    state_idx2word.put(idx, word);
-                    state_word2idx.put(word, idx);
-                    idx++;
+    }
+
+    public void start() {
+        int actionCount = 2;
+        QLearner learner = new QLearner(states.count(), actionCount);
+        bot = new QBot(this, learner);
+        assets.reload();
+        playerx = (int) (SCREEN_WIDTH * 0.2);
+        playery = (SCREEN_HEIGHT - getPlayerHeight()) / 2;
+        basex = 0;
+        baseShift = getBase().getWidth(null) - assets.getBackground().getWidth(null);
+
+        Pipe[] pipe_set1 = getRandomPipe(SCREEN_WIDTH + 200);
+        Pipe[] pipe_set2 = getRandomPipe(SCREEN_WIDTH + 200 + SCREEN_WIDTH / 2);
+
+        upperPipes = new Pipe[]{pipe_set1[1], pipe_set2[1]};
+        lowerPipes = new Pipe[]{pipe_set1[0], pipe_set2[0]};
+
+        pipeVelX = -4;
+
+        // player velocity, max velocity, downward accleration, accleration on flap
+        playerVelY = -9;   // player's velocity along Y, default same as playerFlapped
+        playerMaxVelY = 10;   // max vel along Y, max descend speed
+        playerMinVelY = -8;   // min vel along Y, max ascend speed
+        playerAccY = 1;   // players downward accleration
+        playerFlapAcc = -9;   // players speed on flapping
+        playerFlapped = false; // True when player flaps
+
+        score = 0;
+
+        playerIndexGen = IterTools.cycle(new int[]{0, 1, 2, 1});
+
+        loopIter = 0;
+        playerIndex = 0;
+    }
+
+    public void run() {
+
+        new Thread(() -> {
+            while(true) {
+                Pipe myPipe;
+                if (-playerx + lowerPipes[0].x > -30) {
+                    myPipe = lowerPipes[0];
+                } else {
+                    myPipe = lowerPipes[1];
                 }
+
+                if (bot.act(-playerx + myPipe.x, -playery + myPipe.y, playerVelY) == 1) {
+                    if (playery > -2 * getPlayerHeight()) {
+                        playerVelY = playerFlapAcc;
+                        playerFlapped = true;
+                    }
+                }
+
+                // check for score
+                int playerMidPos = playerx + getPlayerWidth() / 2;
+                for (Pipe pipe : upperPipes) {
+                    int pipeMidPos = pipe.x + getPlayerWidth() / 2;
+                    if (pipeMidPos <= playerMidPos && playerMidPos < pipeMidPos + 4) {
+                        score += 1;
+                    }
+                }
+
+
+                // playerIndex basex change
+                if ((loopIter + 1) % 3 == 0) {
+                    playerIndex = playerIndexGen.next();
+                }
+                loopIter = (loopIter + 1) % 30;
+                basex = -((-basex + 100) % baseShift);
+
+                // player's movement
+                if (playerVelY < playerMaxVelY && !playerFlapped) {
+                    playerVelY += playerAccY;
+                }
+
+                if (playerFlapped) {
+                    playerFlapped = false;
+                    playery += Math.min(playerVelY, BASE_Y - playery - getPlayerHeight());
+                }
+
+
+                // move pipes to left
+                for (Pipe pipe : upperPipes) {
+                    pipe.x += pipeVelX;
+                }
+                for (Pipe pipe : lowerPipes) {
+                    pipe.x += pipeVelX;
+                }
+
+
+                // add new pipe when first pipe is about to touch left of screen
+                if (0 < upperPipes[0].x && upperPipes[0].x < 5) {
+                    Pipe[] newPipe = getRandomPipe();
+                    upperPipes = append(upperPipes, newPipe[0]);
+                    lowerPipes = append(lowerPipes, newPipe[1]);
+                }
+
+
+                // remove first pipe if its out of the screen
+                if (upperPipes[0].x < -getPipeWidth()) {
+                    upperPipes = pop(upperPipes);
+                    lowerPipes = pop(lowerPipes);
+                }
+
+                try {
+                    Thread.sleep(10L);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+                invalidate();
             }
-        }
+        }).start();
+
     }
 
-    public int mapState(double xdif, double ydif, int vel) {
-
-        // Map the (xdif, ydif, vel)to the respective state, with regards to the grids
-        // The state is a string, "xdif_ydif_vel"
-        // X ->[-40, -30.. .120]U[140, 210 ...420]
-        // Y ->[-300, -290 ...160]U[180, 240 ...420]
-
-        if(xdif < 140) {
-            xdif = (int)xdif - ((int)(xdif) % 10);
-        } else {
-            xdif = (int)xdif - ((int)(xdif) % 70);
+    private Pipe[] append(Pipe[] current, Pipe newPipe){
+        Pipe[] result = new Pipe[current.length+1];
+        for(int i=0; i < current.length; ++i){
+            result[i] = current[i];
         }
+        result[current.length] = newPipe;
+        return result;
+    }
 
-        if(ydif < 180) {
-            ydif = (int)ydif - ((int)(ydif) % 10);
-        } else {
-            ydif = (int)(ydif) - ((int)(ydif) % 60);
+    private Pipe[] pop(Pipe[] current) {
+        Pipe[] result = new Pipe[current.length-1];
+        for(int i=1; i < current.length; ++i) {
+            result[i-1] = current[i];
         }
+        return result;
+    }
 
-        String state_word = xdif + "_" + ydif + "_" + vel;
-
-        return state_word2idx.get(state_word);
+    public Image getBase() {
+        return assets.getImage("base");
     }
 
 
-    public Pipe getRandomPipe() {
+
+    public int getPlayerHeight() {
+        return assets.getPlayer()[0].getHeight(null);
+    }
+
+    public int getPlayerWidth() {
+        return assets.getPlayer()[0].getWidth(null);
+    }
+
+    public int getPipeWidth() {
+        return assets.getPipe()[0].getWidth(null);
+    }
+
+    public Pipe[] getRandomPipe() {
         // returns a randomly generated pipe
         // y of gap between upper and lower pipe
         int gapY = random.nextInt((int) (BASE_Y * 0.6 - PIPE_GAP_SIZE));
@@ -87,20 +218,52 @@ public class Game {
 
         int pipeX = SCREEN_WIDTH + 10;
 
-        return new Pipe(pipeX, gapY + PIPE_GAP_SIZE, gapY - PIPE_HEIGHT);
+        return new Pipe[]{
+                new Pipe(pipeX, gapY + PIPE_GAP_SIZE),
+                new Pipe(pipeX, gapY - PIPE_HEIGHT)
+        };
     }
 
-    public Pipe getRandomPipe(int x) {
-        Pipe pipe = getRandomPipe();
-        pipe.x = x;
-        return pipe;
-    }
-
-    public Pipe[] getRandomPipes() {
-        Pipe pipe1 = getRandomPipe(SCREEN_WIDTH + 200);
-        Pipe pipe2 = getRandomPipe(SCREEN_WIDTH + 200 + SCREEN_WIDTH / 2);
-        return new Pipe[] { pipe1, pipe2 };
+    public Pipe[] getRandomPipe(int x) {
+        Pipe[] pipes = getRandomPipe();
+        for(Pipe pipe : pipes) {
+            pipe.x = x;
+        }
+        return pipes;
     }
 
 
+    public int mapState(int xdif, int ydif, int vel) {
+        return states.mapState(xdif, ydif, vel);
+    }
+
+    @Override
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+
+        g.drawImage(assets.getBackground(), 0, 0, null);
+
+        for(Pipe pipe : upperPipes) {
+            g.drawImage(assets.getPipe()[0], pipe.x, pipe.y, null);
+        }
+
+        for(Pipe pipe : lowerPipes) {
+            g.drawImage(assets.getPipe()[1], pipe.x, pipe.y, null);
+        }
+
+        /*
+        for uPipe, lPipe in zip(upperPipes, lowerPipes):
+        SCREEN.blit(IMAGES['pipe'][0], (uPipe['x'], uPipe['y']))
+        SCREEN.blit(IMAGES['pipe'][1], (lPipe['x'], lPipe['y']))
+
+
+
+        SCREEN.blit(IMAGES['base'], (basex, BASEY))
+        # print score so player overlaps the score
+        showScore(score)
+        SCREEN.blit(IMAGES['player'][playerIndex], (playerx, playery))
+
+        pygame.display.update()
+        FPSCLOCK.tick(FPS)*/
+    }
 }

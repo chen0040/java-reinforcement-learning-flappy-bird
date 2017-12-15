@@ -13,13 +13,18 @@ public class Application extends JFrame {
 
     private void initUI() {
 
-        add(new GameBoard(new Game()));
+        Game game = new Game();
+        add(game);
 
         setTitle("Application");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
         setSize(new Dimension(Game.SCREEN_WIDTH, Game.SCREEN_HEIGHT));
+
+        game.start();
+        game.run();
+
     }
 
     public static void main(String[] args) {
