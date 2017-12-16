@@ -194,10 +194,12 @@ public class Game extends JPanel {
                     lowerPipes = pop(lowerPipes);
                 }
 
-                try {
-                    Thread.sleep(20L);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+                if(generation > 500) {
+                    try {
+                        Thread.sleep(20L);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                 }
 
                 repaint();
