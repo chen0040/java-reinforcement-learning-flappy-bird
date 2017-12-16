@@ -152,8 +152,8 @@ public class Game extends JPanel {
                 // add new pipe when first pipe is about to touch left of screen
                 if (0 < upperPipes[0].x && upperPipes[0].x < 5) {
                     Pipe[] newPipe = getRandomPipe();
-                    upperPipes = append(upperPipes, newPipe[0]);
-                    lowerPipes = append(lowerPipes, newPipe[1]);
+                    upperPipes = append(upperPipes, newPipe[1]);
+                    lowerPipes = append(lowerPipes, newPipe[0]);
                 }
 
 
@@ -169,7 +169,7 @@ public class Game extends JPanel {
                     e.printStackTrace();
                 }
 
-                invalidate();
+                repaint();
             }
         }).start();
 
@@ -241,15 +241,17 @@ public class Game extends JPanel {
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
 
-        g.drawImage(assets.getBackground(), 0, 0, null);
+        g.drawImage(assets.getBackground(), 0, 0, this);
 
         for(Pipe pipe : upperPipes) {
-            g.drawImage(assets.getPipe()[0], pipe.x, pipe.y, null);
+            g.drawImage(assets.getPipe()[0], pipe.x, pipe.y, this);
         }
 
         for(Pipe pipe : lowerPipes) {
-            g.drawImage(assets.getPipe()[1], pipe.x, pipe.y, null);
+            g.drawImage(assets.getPipe()[1], pipe.x, pipe.y, this);
         }
+
+        Toolkit.getDefaultToolkit().sync();
 
         /*
         for uPipe, lPipe in zip(upperPipes, lowerPipes):
