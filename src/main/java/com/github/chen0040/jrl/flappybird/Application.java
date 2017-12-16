@@ -6,6 +6,7 @@ import javax.swing.JFrame;
 
 public class Application extends JFrame {
 
+
     public Application() {
 
         initUI();
@@ -22,9 +23,16 @@ public class Application extends JFrame {
 
         setSize(new Dimension(Game.SCREEN_WIDTH, Game.SCREEN_HEIGHT));
 
-        game.start();
-        game.run();
+        runGame(game);
 
+    }
+
+    private void runGame(Game game){
+        game.run(gameOverInfo -> {
+            if(game.getGeneration() < 1000) {
+                runGame(game);
+            }
+        });
     }
 
     public static void main(String[] args) {

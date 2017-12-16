@@ -2,13 +2,17 @@ package com.github.chen0040.jrl.flappybird;
 
 import com.github.chen0040.jrl.flappybird.bots.Bot;
 import com.github.chen0040.jrl.flappybird.bots.QBot;
+import com.github.chen0040.jrl.flappybird.utils.CrashInfo;
 import com.github.chen0040.jrl.flappybird.utils.Cycle;
+import com.github.chen0040.jrl.flappybird.utils.GameOverInfo;
 import com.github.chen0040.jrl.flappybird.utils.IterTools;
+import com.github.chen0040.rl.actionselection.GreedyActionSelectionStrategy;
 import com.github.chen0040.rl.learning.qlearn.QLearner;
 
 import javax.swing.*;
 import java.awt.*;
 import java.util.*;
+import java.util.function.Consumer;
 
 public class Game extends JPanel {
 
@@ -18,7 +22,7 @@ public class Game extends JPanel {
 
     // amount by which base can maximum shift to left
     public static final int PIPE_GAP_SIZE = 100; // gap between upper and lower part of pipe
-    public static final double BASE_Y = SCREEN_HEIGHT * 0.79;
+    public static final int BASE_Y = (int)(SCREEN_HEIGHT * 0.79);
 
     public static final Random random = new Random(42);
 
@@ -56,13 +60,23 @@ public class Game extends JPanel {
 
     private GameAssets assets = new GameAssets();
 
-    public Game() {
+    private int generation = 1;
 
+    private QLearner learner;
+
+    public Game() {
+        int actionCount = 2;
+        learner = new QLearner(states.count(), actionCount);
+        //learner.setActionSelection(GreedyActionSelectionStrategy.class.getCanonicalName());
+        learner.getModel().setAlpha(0.7);
+        learner.getModel().setGamma(1.0);
     }
 
-    public void start() {
-        int actionCount = 2;
-        QLearner learner = new QLearner(states.count(), actionCount);
+    public int getGeneration() { return generation; }
+
+    private void start() {
+
+
         bot = new QBot(this, learner);
         assets.reload();
         playerx = (int) (SCREEN_WIDTH * 0.2);
@@ -82,7 +96,7 @@ public class Game extends JPanel {
         playerVelY = -9;   // player's velocity along Y, default same as playerFlapped
         playerMaxVelY = 10;   // max vel along Y, max descend speed
         playerMinVelY = -8;   // min vel along Y, max ascend speed
-        playerAccY = 1;   // players downward accleration
+        playerAccY = 1;   // players downward acceleration
         playerFlapAcc = -9;   // players speed on flapping
         playerFlapped = false; // True when player flaps
 
@@ -94,8 +108,8 @@ public class Game extends JPanel {
         playerIndex = 0;
     }
 
-    public void run() {
-
+    public void run(Consumer<GameOverInfo> onCompleted) {
+        start();
         new Thread(() -> {
             while(true) {
                 Pipe myPipe;
@@ -110,6 +124,23 @@ public class Game extends JPanel {
                         playerVelY = playerFlapAcc;
                         playerFlapped = true;
                     }
+                }
+
+                CrashInfo crashInfo = GamePhysics.checkCrash(playerx, playery, lowerPipes, upperPipes, assets);
+
+                if(crashInfo.isCrashed()){
+                    bot.updateStrategy();
+                    generation++;
+                    onCompleted.accept(new GameOverInfo(
+                            playery,
+                            crashInfo.isGroundCrashed(),
+                            basex,
+                            upperPipes,
+                            lowerPipes,
+                            score,
+                            playerVelY
+                    ));
+                    break;
                 }
 
                 // check for score
@@ -136,8 +167,8 @@ public class Game extends JPanel {
 
                 if (playerFlapped) {
                     playerFlapped = false;
-                    playery += Math.min(playerVelY, BASE_Y - playery - getPlayerHeight());
                 }
+                playery += Math.min(playerVelY, BASE_Y - playery - getPlayerHeight());
 
 
                 // move pipes to left
@@ -164,7 +195,7 @@ public class Game extends JPanel {
                 }
 
                 try {
-                    Thread.sleep(10L);
+                    Thread.sleep(20L);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -199,15 +230,15 @@ public class Game extends JPanel {
 
 
     public int getPlayerHeight() {
-        return assets.getPlayer()[0].getHeight(null);
+        return assets.getPlayerHeight();
     }
 
     public int getPlayerWidth() {
-        return assets.getPlayer()[0].getWidth(null);
+        return assets.getPlayerWidth();
     }
 
     public int getPipeWidth() {
-        return assets.getPipe()[0].getWidth(null);
+        return assets.getPipeWidth();
     }
 
     public Pipe[] getRandomPipe() {
@@ -253,19 +284,17 @@ public class Game extends JPanel {
 
         Toolkit.getDefaultToolkit().sync();
 
-        /*
-        for uPipe, lPipe in zip(upperPipes, lowerPipes):
-        SCREEN.blit(IMAGES['pipe'][0], (uPipe['x'], uPipe['y']))
-        SCREEN.blit(IMAGES['pipe'][1], (lPipe['x'], lPipe['y']))
+        g.drawImage(assets.getImage("base"), basex, BASE_Y, this);
 
+        // print score so player overlaps the score
+        //showScore(score)
+        g.drawImage(assets.getPlayer()[playerIndex], playerx, playery, this);
 
+        g.drawString("Score: " + score, 100, 100);
+        g.drawString("Generation: " + generation, 100, 80);
+    }
 
-        SCREEN.blit(IMAGES['base'], (basex, BASEY))
-        # print score so player overlaps the score
-        showScore(score)
-        SCREEN.blit(IMAGES['player'][playerIndex], (playerx, playery))
-
-        pygame.display.update()
-        FPSCLOCK.tick(FPS)*/
+    public String stateText(int stateIdx) {
+        return states.stateText(stateIdx);
     }
 }

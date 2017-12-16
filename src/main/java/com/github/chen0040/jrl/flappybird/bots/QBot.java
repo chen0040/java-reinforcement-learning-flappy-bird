@@ -22,12 +22,25 @@ public class QBot extends Bot {
     public void updateStrategy() {
 
 
-        agent.update(lastState, lastAction, game.mapState(0, 0, 10), -1000);
+        //agent.update(lastState, lastAction, game.stateText(0, 0, 10), -1000);
+
+         // Flag if the bird died in the top pipe
+        int y_dif = Integer.parseInt(game.stateText(moves.get(moves.size()-1).newState).split("_")[1]);
+        boolean high_death_flag = y_dif > 120;
 
         for(int i=moves.size()-1; i >=0; --i){
             Move move = moves.get(i);
-            agent.update(move.oldState, move.action, move.newState, move.reward);
+            double r = move.reward;
+            if(i == moves.size()-1 || i == moves.size() - 2) {
+                r = -1000;
+            } else if(high_death_flag) {
+                r = -1000;
+            }
+
+            agent.update(move.oldState, move.action, move.newState, r);
         }
+
+        reset();
 
     }
 }

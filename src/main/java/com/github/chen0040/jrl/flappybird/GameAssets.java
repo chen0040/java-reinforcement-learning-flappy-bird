@@ -105,4 +105,20 @@ public class GameAssets {
         return img;
 
     }
+
+    public int getPlayerHeight() {
+        return getPlayer()[0].getHeight(null);
+    }
+
+    public int getPlayerWidth() {
+        return getPlayer()[0].getWidth(null);
+    }
+
+    public int getPipeWidth() {
+        return getPipe()[0].getWidth(null);
+    }
+
+    public int getPipeHeight() {
+        return getPipe()[0].getHeight(null);
+    }
 }

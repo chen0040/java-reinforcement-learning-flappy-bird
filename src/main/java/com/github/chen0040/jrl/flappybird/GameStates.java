@@ -54,6 +54,10 @@ public class GameStates {
         return state_idx2word.size();
     }
 
+    public String stateText(int stateIdx) {
+        return state_idx2word.get(stateIdx);
+    }
+
     public int mapState(int xdif, int ydif, int vel) {
 
         // Map the (xdif, ydif, vel)to the respective state, with regards to the grids
@@ -75,7 +79,7 @@ public class GameStates {
 
         String state_word = xdif + "_" + ydif + "_" + vel;
 
-        logger.info(state_word);
+        //logger.info(state_word);
 
         return state_word2idx.get(state_word);
     }

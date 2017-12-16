@@ -13,8 +13,6 @@ public abstract class Bot {
     protected int lastAction;
     protected List<Move> moves = new ArrayList<>();
     protected final Game game;
-    protected int playerX;
-    protected int playerY;
 
 
     public static final int PLAYER_HEIGHT = 32;
@@ -54,12 +52,5 @@ public abstract class Bot {
         lastState = -1;
         lastAction = -1;
         moves.clear();
-
-
-
-        playerX = (int)(Game.SCREEN_WIDTH * 0.2);
-        playerY = (Game.SCREEN_HEIGHT - PLAYER_HEIGHT) / 2;
-
-
     }
 }
