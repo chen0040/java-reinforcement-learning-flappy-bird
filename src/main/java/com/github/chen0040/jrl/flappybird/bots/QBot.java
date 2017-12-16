@@ -15,7 +15,10 @@ public class QBot extends Bot {
 
     @Override
     protected int selectAction(int state) {
-        return this.agent.selectAction(state).getIndex();
+        double q0 = this.agent.getModel().getQ(state, 0);
+        double q1 = this.agent.getModel().getQ(state, 1);
+        if(q0 >= q1) return 0;
+        return 1;
     }
 
     @Override
