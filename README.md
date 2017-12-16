@@ -5,7 +5,15 @@ Demo of the [java-reinforcement-learning](https://github.com/chen0040/java-reinf
 The project can be considered a Java port of the [https://github.com/chncyhn/flappybird-qlearning-bot](https://github.com/chncyhn/flappybird-qlearning-bot) 
 for python, with the reinforcement learning component replaced by [java-reinforcement-learning](https://github.com/chen0040/java-reinforcement-learning)
 
-# 
+# Usage
+
+Git clone the project, run make.ps1 or make.sh to build the reinforcement-learning-flappy-bird.jar in the bin folder. 
+
+Next run the following java command:
+
+```bash
+java -jar bin/reinforcement-learning-flappy-bird.jar
+```
 
 # Q Learning with Flappy Bird
 
@@ -62,4 +70,4 @@ public class QBot extends Bot {
 
 The main challenge is to map the distance to the pipes and velocity of the flappy bird into a state. This project addresses
 the state mapping using the solution from [https://github.com/chncyhn/flappybird-qlearning-bot](https://github.com/chncyhn/flappybird-qlearning-bot) and
-converts the state string to a state integer for the QLearner. 
+converts the state string to a state integer for the QLearner. The state mapping implementation can be found in GameStates.java

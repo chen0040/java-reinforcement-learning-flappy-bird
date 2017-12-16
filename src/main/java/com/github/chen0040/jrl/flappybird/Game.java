@@ -194,7 +194,8 @@ public class Game extends JPanel {
                     lowerPipes = pop(lowerPipes);
                 }
 
-                if(generation > 500) {
+
+                if(generation > 500) { // skip the display of the first 500 epoches
                     try {
                         Thread.sleep(20L);
                     } catch (InterruptedException e) {
