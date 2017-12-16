@@ -36,8 +36,9 @@ public class QBot extends Bot {
             double r = move.reward;
             if(i == moves.size()-1 || i == moves.size() - 2) {
                 r = -1000;
-            } else if(high_death_flag) {
+            } else if(high_death_flag && move.action == 1) {
                 r = -1000;
+                high_death_flag = false;
             }
 
             agent.update(move.oldState, move.action, move.newState, r);
