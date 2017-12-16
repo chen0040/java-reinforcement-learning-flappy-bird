@@ -290,11 +290,20 @@ public class Game extends JPanel {
         g.drawImage(assets.getImage("base"), basex, BASE_Y, this);
 
         // print score so player overlaps the score
-        //showScore(score)
         g.drawImage(assets.getPlayer()[playerIndex], playerx, playery, this);
 
-        g.drawString("Score: " + score, 100, 100);
-        g.drawString("Generation: " + generation, 100, 80);
+        Font small = new Font("Helvetica", Font.BOLD, 14);
+        FontMetrics fm = getFontMetrics(small);
+
+        g.setColor(Color.black);
+        g.setFont(small);
+
+        String msg = "Score: " + score;
+        g.drawString(msg, (SCREEN_WIDTH - fm.stringWidth(msg)) / 2,
+                60);
+
+        msg = "Generation: " + generation;
+        g.drawString(msg, (SCREEN_WIDTH - fm.stringWidth(msg)) / 2, 40);
     }
 
     public String stateText(int stateIdx) {
