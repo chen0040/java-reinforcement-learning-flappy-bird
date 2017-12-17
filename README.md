@@ -20,7 +20,7 @@ With the flappy bird game opened, press the "Start" button to start, "Accelerate
 
 The demo video can be found in the image link below:
 
-[![IMAGE ALT TEXT HERE](https://www.youtube.com/watch?v=XigrhpTFnh8/0.jpg)](https://www.youtube.com/watch?v=XigrhpTFnh8)
+[![IMAGE ALT TEXT HERE](http://img.youtube.com/vi/XigrhpTFnh8/0.jpg)](https://www.youtube.com/watch?v=XigrhpTFnh8)
 
 # Q Learning with Flappy Bird
 
