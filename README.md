@@ -15,6 +15,9 @@ Next run the following java command:
 java -jar bin/reinforcement-learning-flappy-bird.jar
 ```
 
+With the flappy bird game opened, press the "Start" button to start, "Accelerate" button to accelerate the game and learning,
+"Stop" button to stop the game.
+
 # Q Learning with Flappy Bird
 
 The following java codes show the implementation of the Q-learn bot for flappy bird TD-learning using [java-reinforcement-learning](https://github.com/chen0040/java-reinforcement-learning) 

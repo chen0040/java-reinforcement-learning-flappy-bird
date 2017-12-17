@@ -24,7 +24,8 @@ public class Application extends JFrame {
         btnStart.addActionListener(e -> runGame(game));
         commands.add(btnStart, BorderLayout.WEST);
 
-        JButton btnAccelerateLearning = new JButton("Accelerate Learning");
+        JButton btnAccelerateLearning = new JButton("Accelerate");
+        btnAccelerateLearning.addActionListener(e -> game.accelerate());
         commands.add(btnAccelerateLearning, BorderLayout.CENTER);
 
         JButton btnStop = new JButton("Stop");

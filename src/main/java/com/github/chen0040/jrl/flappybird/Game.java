@@ -57,6 +57,7 @@ public class Game extends JPanel {
     private GameAssets assets = new GameAssets();
 
     private int generation = 1;
+    private int accelerationCounter = 0;
 
     private QLearner learner;
 
@@ -135,6 +136,7 @@ public class Game extends JPanel {
                 if(crashInfo.isCrashed()){
                     bot.updateStrategy();
                     generation++;
+                    if(accelerationCounter > 0) accelerationCounter--;
                     onCompleted.accept(new GameOverInfo(
                             player_y,
                             crashInfo.isGroundCrashed(),
@@ -199,7 +201,7 @@ public class Game extends JPanel {
                 }
 
 
-                if(generation > 500) { // skip the display of the first 500 epoch
+                if(accelerationCounter <= 0) {
                     try {
                         Thread.sleep(20L);
                     } catch (InterruptedException e) {
@@ -314,5 +316,9 @@ public class Game extends JPanel {
 
     public String stateText(int stateIdx) {
         return states.stateText(stateIdx);
+    }
+
+    public void accelerate() {
+        accelerationCounter = 500;
     }
 }
