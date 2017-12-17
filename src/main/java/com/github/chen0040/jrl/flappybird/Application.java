@@ -43,20 +43,15 @@ public class Application extends JFrame {
 
     private void runGame(Game game){
         game.run(gameOverInfo -> {
-            if(game.getGeneration() < 1000) {
-                runGame(game);
-            }
+            runGame(game);
         });
     }
 
     public static void main(String[] args) {
 
-        EventQueue.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                Application ex = new Application();
-                ex.setVisible(true);
-            }
+        EventQueue.invokeLater(() -> {
+            Application ex = new Application();
+            ex.setVisible(true);
         });
     }
 }

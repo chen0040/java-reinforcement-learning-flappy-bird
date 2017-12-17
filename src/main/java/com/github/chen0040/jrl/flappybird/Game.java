@@ -283,7 +283,12 @@ public class Game extends JPanel {
 
         g.drawImage(assets.getBackground(), 0, 0, this);
 
-        if(stage == GameStage.InProgress) {
+        if(stage == GameStage.Pending) {
+            int x = (SCREEN_WIDTH - assets.getMessage().getWidth(null)) / 2;
+            int y = (SCREEN_HEIGHT - assets.getMessage().getHeight(null)) / 2;
+            g.drawImage(assets.getMessage(), x, y, this);
+        }
+        else if(stage == GameStage.InProgress) {
             for (Pipe pipe : upperPipes) {
                 g.drawImage(assets.getPipe()[0], pipe.x, pipe.y, this);
             }

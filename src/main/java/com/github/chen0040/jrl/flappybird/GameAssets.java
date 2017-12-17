@@ -40,6 +40,7 @@ public class GameAssets {
         }
 
         loadImage("base", "sprites/base.png");
+        loadImage("message", "sprites/message.png");
     }
 
     public void reload() {
@@ -121,4 +122,9 @@ public class GameAssets {
     public int getPipeHeight() {
         return getPipe()[0].getHeight(null);
     }
+
+    public Image getMessage() {
+        return getImage("message");
+    }
+
 }
