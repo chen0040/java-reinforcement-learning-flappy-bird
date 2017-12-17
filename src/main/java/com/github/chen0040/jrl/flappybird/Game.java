@@ -2,11 +2,7 @@ package com.github.chen0040.jrl.flappybird;
 
 import com.github.chen0040.jrl.flappybird.bots.Bot;
 import com.github.chen0040.jrl.flappybird.bots.QBot;
-import com.github.chen0040.jrl.flappybird.utils.CrashInfo;
-import com.github.chen0040.jrl.flappybird.utils.Cycle;
-import com.github.chen0040.jrl.flappybird.utils.GameOverInfo;
-import com.github.chen0040.jrl.flappybird.utils.IterTools;
-import com.github.chen0040.rl.actionselection.GreedyActionSelectionStrategy;
+import com.github.chen0040.jrl.flappybird.utils.*;
 import com.github.chen0040.rl.learning.qlearn.QLearner;
 
 import javax.swing.*;
@@ -30,19 +26,19 @@ public class Game extends JPanel {
 
     private GameStates states = new GameStates();
 
-    private int playerx;
-    private int playery;
+    private int player_x;
+    private int player_y;
 
-    private int basex;
+    private int base_x;
     private int baseShift;
 
     private int pipeVelX = -4;
 
-    // player velocity, max velocity, downward accleration, accleration on flap
+    // player velocity, max velocity, downward acceleration, acceleration on flap
     private int playerVelY    =  -9;   // player's velocity along Y, default same as playerFlapped
     private int playerMaxVelY =  10;   // max vel along Y, max descend speed
     private int playerMinVelY =  -8;   // min vel along Y, max ascend speed
-    private int playerAccY    =   1;   // players downward accleration
+    private int playerAccY    =   1;   // players downward acceleration
     private int playerFlapAcc =  -9;   // players speed on flapping
     private boolean playerFlapped = false; // True when player flaps
 
@@ -64,6 +60,8 @@ public class Game extends JPanel {
 
     private QLearner learner;
 
+    private GameStage stage = GameStage.Pending;
+
     public Game() {
         int actionCount = 2;
         learner = new QLearner(states.count(), actionCount);
@@ -79,9 +77,9 @@ public class Game extends JPanel {
 
         bot = new QBot(this, learner);
         assets.reload();
-        playerx = (int) (SCREEN_WIDTH * 0.2);
-        playery = (SCREEN_HEIGHT - getPlayerHeight()) / 2;
-        basex = 0;
+        player_x = (int) (SCREEN_WIDTH * 0.2);
+        player_y = (SCREEN_HEIGHT - getPlayerHeight()) / 2;
+        base_x = 0;
         baseShift = getBase().getWidth(null) - assets.getBackground().getWidth(null);
 
         Pipe[] pipe_set1 = getRandomPipe(SCREEN_WIDTH + 200);
@@ -106,35 +104,41 @@ public class Game extends JPanel {
 
         loopIter = 0;
         playerIndex = 0;
+        stage = GameStage.InProgress;
     }
+
+    public void stop() {
+        stage = GameStage.Pending;
+    }
+
 
     public void run(Consumer<GameOverInfo> onCompleted) {
         start();
         new Thread(() -> {
-            while(true) {
+            while(stage == GameStage.InProgress) {
                 Pipe myPipe;
-                if (-playerx + lowerPipes[0].x > -30) {
+                if (-player_x + lowerPipes[0].x > -30) {
                     myPipe = lowerPipes[0];
                 } else {
                     myPipe = lowerPipes[1];
                 }
 
-                if (bot.act(-playerx + myPipe.x, -playery + myPipe.y, playerVelY) == 1) {
-                    if (playery > -2 * getPlayerHeight()) {
+                if (bot.act(-player_x + myPipe.x, -player_y + myPipe.y, playerVelY) == 1) {
+                    if (player_y > -2 * getPlayerHeight()) {
                         playerVelY = playerFlapAcc;
                         playerFlapped = true;
                     }
                 }
 
-                CrashInfo crashInfo = GamePhysics.checkCrash(playerx, playery, lowerPipes, upperPipes, assets);
+                CrashInfo crashInfo = GamePhysics.checkCrash(player_x, player_y, lowerPipes, upperPipes, assets);
 
                 if(crashInfo.isCrashed()){
                     bot.updateStrategy();
                     generation++;
                     onCompleted.accept(new GameOverInfo(
-                            playery,
+                            player_y,
                             crashInfo.isGroundCrashed(),
-                            basex,
+                            base_x,
                             upperPipes,
                             lowerPipes,
                             score,
@@ -144,7 +148,7 @@ public class Game extends JPanel {
                 }
 
                 // check for score
-                int playerMidPos = playerx + getPlayerWidth() / 2;
+                int playerMidPos = player_x + getPlayerWidth() / 2;
                 for (Pipe pipe : upperPipes) {
                     int pipeMidPos = pipe.x + getPlayerWidth() / 2;
                     if (pipeMidPos <= playerMidPos && playerMidPos < pipeMidPos + 4) {
@@ -158,7 +162,7 @@ public class Game extends JPanel {
                     playerIndex = playerIndexGen.next();
                 }
                 loopIter = (loopIter + 1) % 30;
-                basex = -((-basex + 100) % baseShift);
+                base_x = -((-base_x + 100) % baseShift);
 
                 // player's movement
                 if (playerVelY < playerMaxVelY && !playerFlapped) {
@@ -168,7 +172,7 @@ public class Game extends JPanel {
                 if (playerFlapped) {
                     playerFlapped = false;
                 }
-                playery += Math.min(playerVelY, BASE_Y - playery - getPlayerHeight());
+                player_y += Math.min(playerVelY, BASE_Y - player_y - getPlayerHeight());
 
 
                 // move pipes to left
@@ -195,7 +199,7 @@ public class Game extends JPanel {
                 }
 
 
-                if(generation > 500) { // skip the display of the first 500 epoches
+                if(generation > 500) { // skip the display of the first 500 epoch
                     try {
                         Thread.sleep(20L);
                     } catch (InterruptedException e) {
@@ -277,33 +281,35 @@ public class Game extends JPanel {
 
         g.drawImage(assets.getBackground(), 0, 0, this);
 
-        for(Pipe pipe : upperPipes) {
-            g.drawImage(assets.getPipe()[0], pipe.x, pipe.y, this);
+        if(stage == GameStage.InProgress) {
+            for (Pipe pipe : upperPipes) {
+                g.drawImage(assets.getPipe()[0], pipe.x, pipe.y, this);
+            }
+
+            for (Pipe pipe : lowerPipes) {
+                g.drawImage(assets.getPipe()[1], pipe.x, pipe.y, this);
+            }
+
+            Toolkit.getDefaultToolkit().sync();
+
+            g.drawImage(assets.getImage("base"), base_x, BASE_Y, this);
+
+            // print score so player overlaps the score
+            g.drawImage(assets.getPlayer()[playerIndex], player_x, player_y, this);
+
+            Font small = new Font("Helvetica", Font.BOLD, 14);
+            FontMetrics fm = getFontMetrics(small);
+
+            g.setColor(Color.black);
+            g.setFont(small);
+
+            String msg = "Score: " + score;
+            g.drawString(msg, (SCREEN_WIDTH - fm.stringWidth(msg)) / 2,
+                    60);
+
+            msg = "Generation: " + generation;
+            g.drawString(msg, (SCREEN_WIDTH - fm.stringWidth(msg)) / 2, 40);
         }
-
-        for(Pipe pipe : lowerPipes) {
-            g.drawImage(assets.getPipe()[1], pipe.x, pipe.y, this);
-        }
-
-        Toolkit.getDefaultToolkit().sync();
-
-        g.drawImage(assets.getImage("base"), basex, BASE_Y, this);
-
-        // print score so player overlaps the score
-        g.drawImage(assets.getPlayer()[playerIndex], playerx, playery, this);
-
-        Font small = new Font("Helvetica", Font.BOLD, 14);
-        FontMetrics fm = getFontMetrics(small);
-
-        g.setColor(Color.black);
-        g.setFont(small);
-
-        String msg = "Score: " + score;
-        g.drawString(msg, (SCREEN_WIDTH - fm.stringWidth(msg)) / 2,
-                60);
-
-        msg = "Generation: " + generation;
-        g.drawString(msg, (SCREEN_WIDTH - fm.stringWidth(msg)) / 2, 40);
     }
 
     public String stateText(int stateIdx) {
